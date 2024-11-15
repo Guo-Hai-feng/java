@@ -1,0 +1,20 @@
+#spring.application.name=exp03springbootdemo
+spring:
+  application:
+    name: exp03springbootdemo
+
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.192.152:3306/exp03db
+    username: root
+    password: my-root-123
+
+mybatis:
+  configuration:
+    auto-mapping-behavior: full
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath:/mappers/*.xml
+  type-aliases-package: org.example.exp03springbootdemo.pojo
+

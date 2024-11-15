@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <title>修改</title>
+</head>
+<body>
+<div class="row clearfix">
+    <div class="col-md-12 column">
+        <div class="page-header">
+            <h1>
+                基于SpringBoot的CRUD案例
+            </h1>
+        </div>
+    </div>
+</div>
+<form th:action="@{/update}" th:method="post">
+    <input type="hidden" name="id" th:value="${user.id}"/>
+    <table>
+        <tr>
+            <td colspan="2">修改记录</td>
+        </tr>
+        <tr>
+            <td>ID</td>
+            <td th:text="${user.id}"></td>
+        </tr>
+        <tr>
+            <td>姓名</td>
+            <td ><input th:value="${user.name}" type="text" name="name"/></td>
+        </tr>
+
+        <tr>
+            <td>年龄</td>
+            <td><input th:value="${user.age}" type="text" name="age"/></td>
+        </tr>
+        <tr>
+            <td>Email</td>
+            <td><input th:value="${user.email}" type="text" name="email"/></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="submit" class="btn btn-primary" value="修改"/>
+            </td>
+        </tr>
+    </table>
+</form>
+</body>
+</html>
