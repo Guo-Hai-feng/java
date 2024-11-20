@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banker's Algorithm</title>
+  <script>
+    let processCount = 0;//进程数量
+    let resourceCount = 0;//资源种类数量
+
+    // 动态生成资源输入表
+    function createResourceTable() {
+      // 获取进程数量和资源种类数量
+      processCount = document.getElementById('processCount').value;
+      resourceCount = document.getElementById('resourceCount').value;
+
+      if (processCount <= 0 || resourceCount <= 0) {
+        alert("进程数量和资源种类数量必须大于 0！");
+        return;
+      }
+      // 创建资源分配输入表格
+      const resourceTableDiv = document.getElementById('resourceTable');
+      resourceTableDiv.innerHTML = `
+    <h3>请输入资源总量</h3>
+    <div id="avaiableInput">
+      ${Array.from({ length: resourceCount }, (_, i) => `
+        <label>资源 ${i}:</label>
+        <input type="number" id="available_${i}" min="0"><br>
+      `).join('')}
+    </div>
+    <h3>请输入每个进程的最大需求</h3>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>进程</th>
+          ${Array.from({ length: resourceCount }, (_, i) => `<th>资源 ${i}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${Array.from({ length: processCount }, (_, i) => `
+          <tr>
+            <td>进程 ${i}</td>
+            ${Array.from({ length: resourceCount }, (_, j) => `
+              <td><input type="number" id="max_${i}_${j}" min="0"></td>
+            `).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <button onclick="initialize()">提交资源数据</button>
+  `;
+    }
+
+
+    function initialize() {
+      const available = [];
+      for (let i = 0; i < resourceCount; i++) {
+        available.push(Number(document.getElementById(`available_${i}`).value) || 0); // 转换为数字
+      }
+      const max = [];
+      for (let i = 0; i < processCount; i++) {
+        const row = [];
+        for (let j = 0; j < resourceCount; j++) {
+          row.push(Number(document.getElementById(`max_${i}_${j}`).value) || 0); // 转换为数字
+        }
+        max.push(row);
+      }
+
+      fetch('/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          processCount: Number(processCount), // 确保是数字
+          resourceCount: Number(resourceCount), // 确保是数字
+          available: available.map(Number), // 将每个元素转换为数字
+          max: max.map(row => row.map(Number)) // 将每个元素转换为数字
+        })
+      })
+              .then(response => response.json())
+              .then(data => {
+                // data.updatedState = undefined;
+                if (data.success) {
+                  alert('资源初始化成功！');
+                  // 显示初始化部分
+                  document.getElementById('initializeSection').style.display = 'none';
+                  setupRequestResourceSection(); // 准备资源请求部分
+                  displayResourceTable(data.updatedState); // 初始化时展示资源状态表
+                } else {
+                  alert(`初始化失败: ${data.message}`);
+                }
+              })
+              .catch(err => console.error('Error:', err));
+    }
+
+
+    function setupRequestResourceSection(state) {
+
+      const requestResourceSection = document.getElementById('requestResourceSection');
+      requestResourceSection.style.display = 'block';
+
+      // 设置进程选择
+      const processSelect = document.getElementById('selectedProcess');
+      processSelect.innerHTML = Array.from({ length: processCount }, (_, i) => `
+    <option value="${i}">进程 ${i}</option>
+  `).join('');
+
+      // 设置资源申请输入
+      const resourceRequestInputs = document.getElementById('resourceRequestInputs');
+      resourceRequestInputs.innerHTML = Array.from({ length: resourceCount }, (_, i) => `
+    <label>资源 ${i}:</label>
+    <input type="number" id="request_${i}" min="0"><br>
+  `).join('');
+    }
+
+
+    function displayResourceTable(state) {
+      const { available, allocation, need } = state;
+      const resourceTableDiv = document.getElementById('resourceTable');
+
+      resourceTableDiv.innerHTML = `
+    <h3>当前资源状态</h3>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>进程</th>
+          <th>Available</th>
+          <th>Allocation</th>
+          <th>Need</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Array.from({ length: processCount }, (_, i) => `
+          <tr>
+            <td>进程 ${i}</td>
+
+             <td>${available.map((val, j) => `<span>${val}</span>`).join(', ')}</td>
+            <td>${allocation[i].map((val, j) => `<span>${val}</span>`).join(', ')}</td>
+            <td>${need[i].map((val, j) => `<span>${val}</span>`).join(', ')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+    }
+
+
+    function submitResourceRequest() {
+      const selectedProcess = document.getElementById('selectedProcess').value;
+      const request = [];
+      for (let i = 0; i < resourceCount; i++) {
+        request.push(Number(document.getElementById(`request_${i}`).value) || 0);
+      }
+
+      fetch('/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ process: Number(selectedProcess), request: request.map(Number) })
+      })
+              .then(response => response.json())
+              .then(data => {
+                const resultDiv = document.getElementById('requestResult');
+                if (data.success) {
+                  resultDiv.innerHTML = `<h4>资源已分配成功！安全序列为: ${data.safeSequence.join(', ')}</h4>`;
+                  console.log("aaa");
+                  displayResourceTable(data.updatedState); // 更新资源分配表
+                } else {
+                  resultDiv.innerHTML = `<h4>${data.message}</h4>`;
+                }
+              })
+              .catch(err => console.error('Error:', err));
+    }
+
+  </script>
+</head>
+<body>
+<h1>银行家算法</h1>
+
+<div id="initializeSection">
+  <h3>资源初始化</h3>
+  <label>进程数量: <input type="number" id="processCount" min="1"></label><br>
+  <label>资源种类数量: <input type="number" id="resourceCount" min="1"></label><br>
+  <button onclick="createResourceTable()">生成资源分配表</button>
+
+</div>
+
+<div id="resourceTable"></div>
+
+<div id="requestResourceSection" style="display: none;">
+  <h3>分配资源请求</h3>
+  <label>选择进程:
+    <select id="selectedProcess"></select>
+  </label>
+  <div id="resourceRequestInputs"></div>
+  <button onclick="submitResourceRequest()">提交资源申请</button>
+  <div id="requestResult"></div>
+</div>
+
+
+
+</body>
+</html>

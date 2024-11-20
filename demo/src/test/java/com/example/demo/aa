@@ -1,0 +1,158 @@
+#include<iostream>
+#include<vector>
+#include<numeric>
+using namespace std;
+
+int n, m;
+vector<vector<int>>Max;  //最大资源需求数量
+vector<vector<int>>Need;  //还需要的资源数量
+vector<int>Aviable;  //资源剩余数量
+vector<vector<int>>Allocation;  //现在已经分配的资源数量
+
+bool isSafe(vector<int>&safearray) {
+	vector<int>works = Aviable;
+	vector<bool> finish(n, false);
+	int count = 0;
+	safearray.clear();
+
+	while (count < n) {
+		bool found = false;
+		for (int i = 0; i < n; i++) {
+			if (!finish[i]) {
+				//如果当前进程还没有结束
+
+				bool canProceed = true;  //假设是可以执行的
+				for (int j = 0; j < m; j++) {
+					if (Need[i][j] > works[j]) {
+						canProceed = false;
+						break;
+					}
+				}
+
+				if (canProceed) {
+					//将当前进程加入安全队列
+					for (int r = 0; r < m; r++) {
+						works[r] += Allocation[i][r];  //进程结束，返回资源
+					}
+
+					finish[i] = true;
+					safearray.push_back(i);
+					found = true;
+					count++;
+				}
+			}
+		}
+
+		if (!found) {
+			return false; // 系统不安全
+		}
+
+	}
+
+	return true;  //系统安全
+
+}
+
+
+bool requestResource(int process,vector<int>request) {
+	for (int i = 0; i < m; i++) {
+		if (request[i] > Need[process][i]) {
+			cout << "资源申请不合理" << endl;
+			return false;
+		}
+
+		if (request[i] > Aviable[i]) {
+			cout << "资源申请超过最大可用资源数，资源不够分配" << endl;
+			return false;
+		}
+	}
+
+
+	//试探性分配
+	for (int i = 0; i < m; i++) {
+		Need[process][i] -= request[i];
+		Allocation[process][i] += request[i];
+		Aviable[i] -= request[i];
+	}
+
+	vector<int>safearray(n, 0);
+	if (isSafe(safearray)) {
+		cout << "资源分配成功，系统处于安全状态" << endl;
+		cout << "安全序列为:" << endl;
+		for (int i = 0; i < n; i++) {
+			cout << "p" << safearray[i];
+			if (i < safearray.size() - 1) cout << "->";
+		}
+		cout << endl;
+		return true;
+	}
+
+	else {
+		//不安全
+		for (int i = 0; i < m; i++) {
+			Aviable[i] += request[i];
+			Allocation[process][i] -= request[i];
+			Need[process][i] += request[i];
+		}
+
+		cout << "找不到安全序列，进程资源申请不予满足" << endl;
+		return false;
+
+	}
+
+
+
+
+
+
+}
+int main() {
+	cout << "请输入进程数量和资源种类数量" << endl;
+	cin >> n >> m;
+	Max.resize(n, vector<int>(m, 0));
+	Allocation.resize(n, vector<int>(m, 0));
+	Need.resize(n, vector<int>(m, 0));
+	Aviable.resize(m, 0);
+
+	cout << "请输入各资源的总数量:" << endl;
+	for (int i = 0; i < m; i++) {
+		cout << "资源" << i << ":";
+		cin >> Aviable[i];
+	}
+
+	cout << "请输入各个进程的最大需求" << endl;
+	for (int i = 0; i < n; i++) {
+		cout << "进程" << i << ":" << endl;
+		for (int j = 0; j < m; j++) {
+			cin >> Max[i][j];
+			Need[i][j] = Max[i][j];
+		}
+	}
+
+	bool isfinish = false;
+	int sum = 0;
+
+	do {
+		int process;
+		vector<int> request(m, 0);
+		cout << "请输入请求资源的进程编号:" << endl;
+		cin >> process;
+
+		cout << "请输入该进程请求的各类资源数量:" << endl;
+		for (int j = 0; j < m; j++) {
+			cout << "资源" << j << ": ";
+			cin >> request[j];
+		}
+
+		// 处理资源请求
+		if (requestResource(process, request)) {
+			sum = 0;
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < m; j++) {
+					sum += Need[i][j];
+				}
+			}
+		}
+	} while (sum>0);
+
+}
