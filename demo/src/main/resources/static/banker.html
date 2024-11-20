@@ -19,6 +19,13 @@
         return;
       }
       // 创建资源分配输入表格
+      /*document.getElementById('resourceTable')：
+该函数用于根据给定的 id 属性查找 HTML 元素。在这里，它查找的是 id 为 'resourceTable' 的元素。
+如果页面中存在具有该 id 的元素，它会返回该元素的引用。如果没有找到，返回 null。
+const resourceTableDiv：
+getElementById 返回的元素引用被赋值给了变量 resourceTableDiv。
+这意味着 resourceTableDiv 现在引用了 id 为 resourceTable 的 DOM 元素，
+可以在后续的代码中对该元素进行操作（例如更改其内容、样式或行为）。*/
       const resourceTableDiv = document.getElementById('resourceTable');
       resourceTableDiv.innerHTML = `
     <h3>请输入资源总量</h3>
@@ -66,6 +73,15 @@
         max.push(row);
       }
 
+      /*
+      * fetch 是一个用于发起网络请求的函数，这里它发送一个 POST 请求到 /init URL，
+      * 通常这个 URL 是在服务器端设置的，用来处理资源初始化的请求。
+      *
+      *
+      * .then(response => response.json())：首先将服务器返回的响应转为 JSON 格式。
+        .then(data => { ... })：处理转换后的数据：
+*/
+
       fetch('/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,7 +110,6 @@
 
 
     function setupRequestResourceSection(state) {
-
       const requestResourceSection = document.getElementById('requestResourceSection');
       requestResourceSection.style.display = 'block';
 
@@ -172,6 +187,7 @@
     }
 
   </script>
+
 </head>
 <body>
 <h1>银行家算法</h1>

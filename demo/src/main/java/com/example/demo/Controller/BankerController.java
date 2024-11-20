@@ -120,11 +120,26 @@ public class BankerController {
         return Arrays.stream(original).map(int[]::clone).toArray(int[][]::new);
     }
 
+    /*
+
+外层循环：通过 while (safeSequence.size() < processCount) 保证最终找到一个包含所有进程的安全序列（即，长度等于进程数）。
+如果在一个完整的循环中无法找到可执行的进程（即所有进程的需求都大于可用资源），返回 null，表示无法找到安全序列，系统处于不安全状态。
+内层循环：遍历每个进程，检查该进程是否可以完成（即检查 canFinish 方法）。
+canFinish ：它接收当前可用资源 (work 数组) 和某进程的需求资源 (need 数组)，如果 work[i] 小于 need[i] 的任何元素，表示该进程无法完成；
+如果所有的 work[i] 都大于等于 need[i]，则返回 true，表示该进程能够完成。
+代码的执行流程：
+从 availableTemp 数组开始，记录当前可用资源。
+通过 finish 数组记录每个进程是否完成。
+遍历每个进程，判断是否可以完成。如果某个进程可以完成，则将其分配的资源释放回 work 中（即更新 work）。
+如果成功完成一个进程，则将其加入到 safeSequence 中。
+如果能够遍历所有进程并找到一个可以完成的顺序，则返回该安全序列；否则返回 null，表示没有找到安全序列，系统处于不安全状态。
+    * */
+
     // 银行家算法检查安全性
     private List<Integer> checkSafety(int[] availableTemp, int[][] allocationTemp, int[][] needTemp) {
-        boolean[] finish = new boolean[processCount];
-        int[] work = availableTemp.clone();
-        List<Integer> safeSequence = new ArrayList<>();
+        boolean[] finish = new boolean[processCount];   //记录每个进程是否已经完成。
+        int[] work = availableTemp.clone();  //记录当前可用的资源，初始时为 availableTemp 的副本。
+        List<Integer> safeSequence = new ArrayList<>();  //保存找到的安全序列，最终返回该序列。
 
         while (safeSequence.size() < processCount) {
             boolean found = false;
